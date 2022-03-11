@@ -1,10 +1,11 @@
 <template>
   <main class="bg-zinc-100 p-4 text-zinc-700 w-[360px]">
     <div class="max-h-[800px] overflow-y-auto">
-      <div class="bg-white rounded px-4">
+      <div class="">
         <div
           v-for="rule of rules"
           :key="rule.id"
+          class="bg-white rounded mt-2 px-4"
         >
           <div
             class="flex h-10 w-full items-center justify-center"
@@ -25,9 +26,8 @@
             </div>
           </div>
 
-          <div>
+          <div v-if="currentEdit === rule.id" class="border-t border-solid border-zinc-300 ">
             <RuleForm
-              v-if="currentEdit === rule.id"
               :rule="rule"
             />
           </div>
@@ -60,9 +60,11 @@ function toggleForm(id: string) {
 }
 
 function addRule() {
+  const id = Date.now().toString()
+
   rules.value.push({
     name: 'New Rule',
-    id: Date.now().toString(),
+    id,
     action: {
       type: 'replace',
       headerName: '',
@@ -74,6 +76,8 @@ function addRule() {
     },
     enabled: true,
   })
+
+  currentEdit.value = id
 }
 
 </script>

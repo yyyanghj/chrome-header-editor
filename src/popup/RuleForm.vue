@@ -17,7 +17,7 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <div class="border-t border-solid border-zinc-300 py-4">
+  <div class="py-4">
     <div class="row">
       <h6 class="field-heading">
         Rule Name:
