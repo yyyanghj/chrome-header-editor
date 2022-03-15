@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import { Rule } from '~/types'
 
 type Props = {
@@ -12,7 +13,14 @@ const formState = reactive(props.rule)
 const emit = defineEmits<{
   (e: 'save', rule: Rule): void
   (e: 'close'): void
+
 }>()
+
+const inputRef = ref<HTMLInputElement>()
+
+onMounted(() => {
+  inputRef.value?.focus()
+})
 
 </script>
 
@@ -23,6 +31,7 @@ const emit = defineEmits<{
         Rule Name:
       </h6>
       <input
+        ref="inputRef"
         v-model="formState.name"
         class="field-input"
         type="text"
@@ -31,12 +40,13 @@ const emit = defineEmits<{
 
     <div class="row">
       <h6 class="field-heading">
-        Url Match:
+        Url:
       </h6>
       <input
         v-model="formState.matcher.value"
         class="field-input"
         type="text"
+        tabindex="0"
       >
     </div>
 
@@ -44,14 +54,24 @@ const emit = defineEmits<{
       <h6 class="field-heading">
         Header Key:
       </h6>
-      <input v-model="formState.action.headerName" class="field-input" type="text">
+      <input
+        v-model="formState.action.headerName"
+        tabindex="1"
+        class="field-input"
+        type="text"
+      >
     </div>
 
     <div class="row">
       <h6 class="field-heading">
         Header Value:
       </h6>
-      <input v-model="formState.action.headerValue" class="field-input" type="text">
+      <input
+        v-model="formState.action.headerValue"
+        tabindex="2"
+        class="field-input"
+        type="text"
+      >
     </div>
 
     <!-- <div class="flex mt-2 row gap-6">

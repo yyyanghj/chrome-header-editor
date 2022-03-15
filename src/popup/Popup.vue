@@ -8,10 +8,13 @@
           class="bg-white rounded mt-2 px-4"
         >
           <div
-            class="flex h-10 w-full items-center justify-center"
+            class="cursor-pointer flex h-10 w-full items-center justify-center"
+            @click="toggleForm(rule.id)"
           >
-            <h3 class="flex-1 mr-6">
-              {{ rule.name }}
+            <h3 class="flex-1 mr-6 select-none">
+              <div class="overflow-ellipsis">
+                {{ rule.name }}
+              </div>
             </h3>
 
             <div class="flex ml-auto gap-2 items-center">
@@ -19,9 +22,9 @@
 
               <div
                 class="cursor-pointer flex h-8 text-zinc-400 w-8 items-center  justify-center"
-                @click="toggleForm(rule.id)"
+                @click="deteleRule(rule.id)"
               >
-                <icon-lucide-chevron-down />
+                <icon-lucide-trash2 />
               </div>
             </div>
           </div>
@@ -35,7 +38,7 @@
       </div>
     </div>
 
-    <Button class="mt-4 w-full" @click="addRule">
+    <Button tabindex="-1" class="mt-4 w-full" @click="addRule">
       Add Rule
     </Button>
   </main>
@@ -43,13 +46,13 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { sendMessage } from 'webext-bridge'
 import RuleForm from './RuleForm.vue'
-import { useStorageLocal } from '~/composables/useStorageLocal'
 import { Rule } from '~/types'
 
 const currentEdit = ref('')
 
-const rules = useStorageLocal<Rule[]>('rules', [])
+const rules = ref<Rule[]>([])
 
 function toggleForm(id: string) {
   if (currentEdit.value === id)
@@ -79,5 +82,18 @@ function addRule() {
 
   currentEdit.value = id
 }
+
+function deteleRule(id: string) {
+  rules.value = rules.value.filter(rule => rule.id !== id)
+}
+
+onMounted(async() => {
+  const data: any = await sendMessage('request-rules', {}, 'background')
+  rules.value = data
+
+  watchEffect(() => {
+    sendMessage('update-rules', rules.value, 'background')
+  })
+})
 
 </script>

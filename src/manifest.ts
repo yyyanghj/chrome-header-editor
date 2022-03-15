@@ -35,8 +35,6 @@ export async function getManifest() {
       'tabs',
       'storage',
       'activeTab',
-      'declarativeNetRequest',
-      'declarativeNetRequestFeedback',
       'webRequest',
       'webRequestBlocking',
       'http://*/',

@@ -1,8 +1,18 @@
-import { WebRequest } from 'webextension-polyfill'
-import { useStorageLocal } from '~/composables/useStorageLocal'
+import { onMessage } from 'webext-bridge'
+import { Headers } from './headers'
 import { Rule } from '~/types'
+import { useStorageLocal } from '~/composables/useStorageLocal'
 
-const rules = useStorageLocal<Rule[]>('rules', [], { listenToStorageChanges: true })
+const rulesRef = useStorageLocal<Rule[]>('rules', [], { listenToStorageChanges: true })
+
+onMessage('request-rules', () => {
+  return rulesRef.value
+})
+
+onMessage('update-rules', (message) => {
+  const data = message.data as any
+  rulesRef.value = data
+})
 
 // only on dev mode
 if (import.meta.hot) {
@@ -19,45 +29,31 @@ browser.runtime.onInstalled.addListener((): void => {
 
 browser.webRequest.onBeforeSendHeaders.addListener(
   (details) => {
-    const requestHeaders = details.requestHeaders || []
-    const _rules = rules.value
+    const headers = new Headers(details.requestHeaders || [])
+    const rules = rulesRef.value
 
-    const headerNameMap: Record<string, string> = {}
-    const headers = new Map<string, WebRequest.HttpHeadersItemType>()
-
-    for (let i = 0; i < requestHeaders.length; i++) {
-      const h = requestHeaders[i]
-      headers.set(h.name, h)
-      headerNameMap[h.name.toLowerCase()] = h.name
-    }
-
-    for (let i = 0; i < _rules.length; i++) {
-      const rule = _rules[i]
+    for (let i = 0; i < rules.length; i++) {
+      const rule = rules[i]
 
       if (!rule.enabled)
         continue
 
       const url = rule.matcher.value
 
-      if (!details.url.includes(url))
+      if (!url || !details.url.includes(url))
         continue
 
-      const lower = rule.action.headerName.toLowerCase()
-      const originName = headerNameMap[lower]
-      if (originName) {
-        const origin = headers.get(originName)!
-        origin.value = rule.action.headerValue
-      }
-      else {
-        headers.set(rule.action.headerName, {
-          name: rule.action.headerName,
-          value: rule.action.headerValue,
-        })
-      }
+      const ruleHeaderName = rule.action.headerName
+      const ruleHeaderValue = rule.action.headerValue
+
+      if (!ruleHeaderName)
+        continue
+
+      headers.setHeader(ruleHeaderName, ruleHeaderValue)
     }
 
     return {
-      requestHeaders: Array.from(headers.values()),
+      requestHeaders: headers.toArray(),
     }
   },
   {
